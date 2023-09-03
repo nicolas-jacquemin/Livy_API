@@ -1,0 +1,35 @@
+version: '3.8'
+
+services:
+  
+  mongo:
+    image: mongo
+    restart: unless-stopped
+    volumes:
+      - mongodb:/data/db
+    networks:
+      - backend
+    env_file: ./.env
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: noworry
+      MONGO_INITDB_ROOT_PASSWORD: itsalocalapp
+    command: mongod --auth
+
+  server:
+    build: ./docker
+    restart: unless-stopped
+    env_file: ./.env
+    environment:
+      MONGODB_URI: "mongodb://noworry:itsalocalapp@mongo"
+    ports:
+      - $LV_SRV_PORT:$LV_SRV_PORT
+    depends_on:
+      - mongo
+    networks:
+      - backend
+
+networks:
+  backend:
+
+volumes:
+  mongodb:

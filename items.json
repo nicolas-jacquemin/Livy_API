@@ -1,0 +1,22 @@
+[
+    {
+        "name": "Canal+ F1",
+        "id" : "cplusf1",
+        "idSupplier": "17291"
+    },
+    {
+        "name": "Canal+ Sport",
+        "id" : "cplussp",
+        "idSupplier": "26456"
+    },
+    {
+        "name": "Canal+ Sport 360",
+        "id" : "cplussp360",
+        "idSupplier": "41233"
+    },
+    {
+        "name": "Canal+",
+        "id" : "cplus",
+        "idSupplier": "26451"
+    }
+]
