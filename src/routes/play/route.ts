@@ -2,7 +2,7 @@ import express from 'express'
 const router = express.Router();
 import { get_item_from_url } from "../../items.js";
 import { sendManifest, sendSupplierContent, addQueue, endQueue } from "../../controllers/play.js";
-import requireAuth from "../../middleware/requireAuth.js";
+import requireAuth from "../../middlewares/requireAuth.js";
 
 router.get('/content/supplier/:queueId/*', (req, res) => {
     sendSupplierContent(res, req.params.queueId, req.url);

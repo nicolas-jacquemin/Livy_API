@@ -1,16 +1,17 @@
 import express from "express";
-import cors from 'cors';
+import cors from "cors";
 import cookie from "cookie-parser";
 import dotenv from "dotenv";
 import import_routes from "./router.js";
-import { main as db } from "./controllers/db.js";
-import requireEnv from './requiredEnvVars.js'
+import { main as db } from "./services/db.js";
+import requireEnv from "./requiredEnvVars.js";
+import { XtreamCodesService } from "./services/xtream-codes.service.js";
 dotenv.config();
 
 const app = express();
 
 const livyMajorError = (msg: string) => {
-  console.log(msg)
+  console.log(msg);
   app.disable("x-powered-by");
   app.use("*", (req, res) => {
     res.status(500).json({
@@ -33,7 +34,9 @@ const check_env_vars = () => {
 const launchApp = async () => {
   console.log("Launching app...");
   if (!check_env_vars()) {
-      livyMajorError("Environment variables error: Please check your '.env' file. It must contain all the required variables you have in '.env.example'.");
+    livyMajorError(
+      "Environment variables error: Please check your '.env' file. It must contain all the required variables you have in '.env.example'."
+    );
     return;
   }
   app.disable("x-powered-by");
@@ -58,6 +61,14 @@ const launchApp = async () => {
       console.log("App launched.");
     });
   });
+  XtreamCodesService.getInstance()
+    .scanLiveStreams()
+    .then(() => {
+      console.log("Scanned live streams.");
+    })
+    .catch((err) => {
+      console.log("Error scanning live streams");
+    });
 };
 
 launchApp();

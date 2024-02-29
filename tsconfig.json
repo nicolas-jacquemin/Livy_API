@@ -1,14 +1,15 @@
 {
     "compilerOptions": {
-        "module": "ES2020",
+        "module": "ESNext",
         "target": "ESNext",
         "noImplicitAny": true,
         "removeComments": true,
-        "moduleResolution": "Node",
+        "moduleResolution": "Bundler",
         "allowSyntheticDefaultImports": true,
         "outDir": "./dist",
         "resolveJsonModule": true,
-        "esModuleInterop": true
+        "esModuleInterop": true,
+        "typeRoots": ["./types/d.ts"]
     },
     "include": [
         "./src/**/*",

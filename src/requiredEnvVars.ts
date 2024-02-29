@@ -1,6 +1,9 @@
 export default [
     'LV_SRV_PORT',
     'LV_PROXY_LEVEL',
+    'XTREAM_CODES_BASE_URL',
+    'XTREAM_CODES_USERNAME',
+    'XTREAM_CODES_PASSWORD',
     'LV_URL',
     'LV_HOST',
     'LV_USER',

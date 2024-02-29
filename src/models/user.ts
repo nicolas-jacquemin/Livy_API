@@ -1,4 +1,4 @@
-import db from '../controllers/db.js';
+import db from '../services/db.js';
 
 export type User = {
     password: string;
