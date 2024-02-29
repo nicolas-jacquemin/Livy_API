@@ -9,16 +9,20 @@ const fieldsValidation = async (req: Request, res: Response) => {
     res.status(400).json({ message: "Registration is currently disabled." });
     return false;
   }
-  if(!req.body.name.match(/^[a-zA-Z ]{2,30}$/)){
-    res.status(400).json({ message: "Name must be between 2 and 30 characters long and contain only letters and spaces." });
+  if(!req.body.name || req.body.name.length < 2 || req.body.name.length > 30){
+    res.status(400).json({ message: "Name must be between 2 and 30 characters long." });
     return false;
   }
   if(!/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/.test(req.body.email)){
     res.status(400).json({ message: "Email is not valid." });
     return false;
   }
-  if(!req.body.password.match(/^(?!.*\s)(?=.*[A-Z])(?=.*[a-z])(?=.*[0-9])(?=.*[~`!@#$%^&*()--+={}\[\]|\\:;"'<>,.?/_₹]).{10,64}$/)){
-    res.status(400).json({ message: "Password must be at least 10 characters long, 64 less and contain at least one uppercase letter, one lowercase letter and one number." });
+  if(!req.body.password || req.body.password.length < 8){
+    res.status(400).json({ message: "Password must be at least 8 characters long" });
+    return false;
+  }
+  if (process.env.BLOCK_REGISTRATION === "true") {
+    res.status(400).json({ message: "Registration is currently disabled." });
     return false;
   }
   if (process.env.BLOCK_REGISTRATION === "onlyMasterInvite") {
@@ -39,10 +43,9 @@ const fieldsValidation = async (req: Request, res: Response) => {
 
 const register = async (req: Request, res: Response) => {
   if (
-    !req.body.name ||
-    !req.body.email ||
-    !req.body.password ||
-    !req.body.inviteCode
+    req.body.name == undefined ||
+    req.body.email == undefined ||
+    req.body.password == undefined
   ) {
     res.status(400).json({ message: "Missing fields..." });
     return;

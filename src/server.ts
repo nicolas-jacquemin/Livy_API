@@ -1,4 +1,5 @@
 import express from "express";
+import cors from 'cors';
 import cookie from "cookie-parser";
 import dotenv from "dotenv";
 import import_routes from "./router.js";
@@ -7,7 +8,6 @@ import requireEnv from './requiredEnvVars.js'
 dotenv.config();
 
 const app = express();
-const router = express.Router();
 
 const livyMajorError = (msg: string) => {
   console.log(msg)
@@ -42,6 +42,7 @@ const launchApp = async () => {
   app.use(express.json());
   app.use(express.urlencoded({ extended: true }));
   app.use(cookie());
+  app.use(cors());
   try {
     await db();
   } catch (err) {

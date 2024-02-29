@@ -1,5 +1,4 @@
 FROM node:19-alpine
+RUN apk add --no-cache bash
 WORKDIR /app
-COPY ["./package.json", "./package-lock.json", "./"]
-RUN npm install
 EXPOSE 3000
