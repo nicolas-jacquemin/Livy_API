@@ -3,12 +3,7 @@ import db from "../services/db.js";
 const liveStreamCategorySchema = new db.Schema({
   category_id: { type: String, required: true, index: { unique: true } },
   category_name: { type: String, required: true, index: true },
-});
-
-liveStreamCategorySchema.virtual("streams", {
-  ref: "LiveStream",
-  localField: "category_id",
-  foreignField: "category",
+  streams: [{ type: db.Schema.Types.ObjectId, ref: "LiveStream" }],
 });
 
 const LiveStreamCategory = db.model(

@@ -1,9 +1,11 @@
-import { Model as BaseModel } from "mongoose";
+import { Model as BaseModel, Query } from "mongoose";
 import type { Request } from "express";
 
 export class QueryBuilder<Model extends BaseModel<any>> {
   private filters: Record<string, {name: string, filter: any}> = {};
   private psort: any = {};
+  private pselect: any = {};
+  private ppopulate: any = {};
 
   constructor(
     private readonly model: Model,
@@ -30,6 +32,23 @@ export class QueryBuilder<Model extends BaseModel<any>> {
     return this;
   }
 
+  public select(query: any) {
+    this.pselect = query;
+    return this;
+  }
+
+  private populateQuery(query: Query<any, any>) {
+    Object.keys(this.ppopulate).forEach((key) => {
+      query.populate(key, this.ppopulate[key]);
+    });
+    return query;
+  }
+
+  public populate(path: string, select?: any) {
+    this.ppopulate[path] = select;
+    return this;
+  }
+
   public async get(req: Request) {
     const model = this.model;
     const builder = this;
@@ -37,6 +56,7 @@ export class QueryBuilder<Model extends BaseModel<any>> {
     return new Promise<Model>((resolve) => {
       model
       .find(builder.getFilters(req))
+      .select(builder.pselect)
       .sort(builder.psort)
       .exec(function (err: never, data: any) {
         resolve(data);
@@ -49,7 +69,9 @@ export class QueryBuilder<Model extends BaseModel<any>> {
     const builder = this;
 
     return new Promise<Model>((resolve) => {
-      model.findOne(builder.getFilters(req), function (err: never, data: any) {
+      model.findOne(builder.getFilters(req))
+      .select(builder.pselect)
+      .exec(function (err: never, data: any) {
         resolve(data);
       });
     });
@@ -65,19 +87,24 @@ export class QueryBuilder<Model extends BaseModel<any>> {
     
     const builder = this;
 
-    return new Promise<{data: Model, page: number, pages: number, perPage: number}>((resolve) => {
-      model
+    return new Promise<{data: Model, page: number, pages: number, perPage: number, total: number}>((resolve) => {
+      const request = model
         .find(builder.getFilters(req))
         .skip(skip)
         .limit(perPage)
         .sort(builder.psort)
-        .exec(function (err: never, data: any) {
+        .select(builder.pselect);
+
+        builder.populateQuery(request);
+
+        request.exec(function (err: never, data: any) {
           model.find(builder.getFilters(req)).count().exec(function (err: never, count: number) {
             resolve({
               data,
               page,
               pages: Math.floor(count / perPage) + 1,
               perPage,
+              total: count,
             });
           });
         });

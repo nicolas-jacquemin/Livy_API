@@ -31,13 +31,17 @@ export class XtreamCodesService {
     const categories = await this.player.getLiveStreamCategory();
     for (const category of categories) {
       if (!(await LiveStreamCategory.exists({ category_id: category.category_id }))) {
-        LiveStreamCategory.create(category);
+        await (await LiveStreamCategory.create(category)).save();
       }
       const categoryEntity = await LiveStreamCategory.findOne({ category_id: category.category_id });
       const liveStreams = await this.player.getLiveStreams(category.category_id);
       for (const liveStream of liveStreams) {
-        if (!(await LiveStream.exists({ num: liveStream.num })))
-          LiveStream.create({...liveStream, category: categoryEntity});
+        if (!(await LiveStream.exists({ num: liveStream.num }))) {
+          const liveStreamEntity = await LiveStream.create({...liveStream, category: categoryEntity._id});
+          await liveStreamEntity.save();
+          categoryEntity.streams.push(liveStreamEntity._id);
+          await categoryEntity.save();
+        }
       }
     }
   }
