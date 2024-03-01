@@ -61,14 +61,6 @@ const launchApp = async () => {
       console.log("App launched.");
     });
   });
-  XtreamCodesService.getInstance()
-    .scanLiveStreams()
-    .then(() => {
-      console.log("Scanned live streams.");
-    })
-    .catch((err) => {
-      console.log("Error scanning live streams");
-    });
 };
 
 launchApp();

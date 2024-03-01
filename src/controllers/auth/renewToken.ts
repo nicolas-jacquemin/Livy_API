@@ -15,7 +15,7 @@ const renewToken = (req: Request, res: Response) => {
     if (err) {
       res.status(401).json({ message: "Unauthorized." });
     } else {
-      User.findOne({ email: decodedToken.email }, (err: any, user: UserT) => {
+      User.findById(decodedToken._id, (err: any, user: UserT) => {
         if (err) {
           res.status(500).json({ message: "Error renewing token." });
         } else {

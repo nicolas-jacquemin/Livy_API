@@ -1,6 +1,7 @@
 import db from '../services/db.js';
 
 export type User = {
+    _id: any;
     password: string;
     email: string;
     name: string;

@@ -4,7 +4,7 @@ import type { User as UserT } from "../../models/user.js";
 
 const tokenGen = (user: UserT, res: Response) => {
   const token = jwt.sign(
-    { email: user.email },
+    { email: user.email, _id: user._id},
     process.env.LV_JWT_SECRET,
     { expiresIn: process.env.LV_JWT_EXPIRES_IN }
   );
