@@ -7,7 +7,14 @@ const router = express.Router();
 
 router.get('/', async (req, res) => {
   const me = await User.findById(req.userId)
-  .populate('likedLiveStreams')
+  .populate({
+    path: 'likedLiveStreams',
+    populate: {
+      path: 'category',
+      select: '-streams -__v'
+    },
+    select: '-__v'
+  })
   .select('_id createdAt name email role likedLiveStreams');
 
   res.send(me);

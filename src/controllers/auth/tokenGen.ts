@@ -21,7 +21,7 @@ const tokenGen = (user: UserT, res: Response) => {
     }
   res
     .status(200)
-    .setHeader("Set-Cookie", `userToken=${token}; HttpOnly; Secure; SameSite=Strict; Path=/; Expires=${expiryDate.toUTCString()}`)
+    .setHeader("Set-Cookie", `userToken=${token}; HttpOnly; Secure; SameSite=Lax; Path=/; Expires=${expiryDate.toUTCString()}`)
     .json({
       message: "Logged in.",
       expires: expiryDate,
