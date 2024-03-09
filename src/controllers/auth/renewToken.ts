@@ -6,12 +6,12 @@ import type { DecodedToken } from "../../middlewares/requireAuth.js";
 import type { User as UserT } from "../../models/user.js";
 
 const renewToken = (req: Request, res: Response) => {
-  if (!req.body.token) {
+  if (!req.cookies.userToken) {
     res.status(500).json({ message: "Missing fields..." });
     return;
   }
 
-  jwt.verify(req.body.token, process.env.LV_JWT_SECRET, (err: any, decodedToken: DecodedToken) => {
+  jwt.verify(req.cookies.userToken, process.env.LV_JWT_SECRET, (err: any, decodedToken: DecodedToken) => {
     if (err) {
       res.status(401).json({ message: "Unauthorized." });
     } else {

@@ -3,6 +3,7 @@ import rateLimit from 'express-rate-limit'
 import login from '../../controllers/auth/login.js'
 import register from '../../controllers/auth/register.js'
 import renewToken from '../../controllers/auth/renewToken.js'
+import logout from '../../controllers/auth/logout.js'
 const router = express.Router();
 
 const loginLimiter = rateLimit({
@@ -22,5 +23,6 @@ const registerLimiter = rateLimit({
 router.post('/login', loginLimiter, login);
 router.post('/register', registerLimiter, register);
 router.post('/renewToken', renewToken);
+router.post('/logout', logout);
 
 export default router;

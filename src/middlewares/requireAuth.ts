@@ -20,8 +20,9 @@ const requireAuth = async (req: Request, res: Response, next: NextFunction) => {
         res.status(401).json({ message: "Unauthorized." });
       } else {
         req.user = decodedToken.email;
-        req.userId = Number(decodedToken._id);
-        const user = await User.findById(decodedToken._id);
+        req.userId = decodedToken._id;
+        const user = await User.findById(decodedToken._id)
+        .select("-password -inviteCode -__v");
         if (!user) {
           res.status(401).json({ message: "Unauthorized." });
           return;

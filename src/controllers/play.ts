@@ -1,8 +1,11 @@
 import request from "request";
-import type { Item } from "../items.js";
 import type { Request, Response } from "express";
+import LiveStreamSchema from "../models/LiveStream.js";
+import type { HydratedDocumentFromSchema } from "mongoose";
 
-interface Session extends Item {
+interface LiveStream extends HydratedDocumentFromSchema<typeof LiveStreamSchema.schema> {};
+
+interface Session extends LiveStream {
   manifestURL?: string;
   manifestMime?: string;
   manifest?: string;
@@ -10,7 +13,7 @@ interface Session extends Item {
 
 type userQueue = {
   id: string;
-  session: Session;
+  session?: Session;
   time: {
     start: number;
     lastRequest: number;
@@ -28,7 +31,7 @@ let playingSession: Session[] = [];
 const sendUserQueue = (res: Response, userQueue: userQueue) => {
   res.json({
     id: userQueue.id,
-    session: userQueue.session.id,
+    session: userQueue.session?.id,
     manifest: `/api/play/manifest/${userQueue.id}/index.m3u8`,
     stop: `/api/play/stop/${userQueue.id}`,
   });
@@ -44,7 +47,7 @@ const endQueue = (req: Request, res: Response, userID: string) => {
   res.status(200).send("OK");
 };
 
-const getAccreditation = (item: Item) => {
+const getAccreditation = (item: LiveStream) => {
   let numOfSession = 0;
   for (let i = 0; i < playingSession.length; i++) {
     if (playingSession[i].id !== item.id) {
@@ -72,7 +75,7 @@ const manifestModify = (m3u8: string, userQueue: userQueue) => {
 
 const retrieveFirstManifest = async (session: Session, res: Response, userQueue: userQueue) => {
   try {
-    let manifest = await fetch(`${process.env.LV_URL}/${process.env.LV_USER}/${process.env.LV_PASS}/${session.idSupplier}.m3u8`, {
+    let manifest = await fetch(`${process.env.LV_URL}/${process.env.LV_USER}/${process.env.LV_PASS}/${session.stream_id}.m3u8`, {
       method: "GET",
       headers: {
         'User-Agent': "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/113.0.0.0 Safari/537.36",
@@ -81,7 +84,7 @@ const retrieveFirstManifest = async (session: Session, res: Response, userQueue:
     });
     let responseText = await manifest.text();
     if (manifest.status !== 200 || responseText === "\n") {
-      console.log(`${process.env.LV_URL}/${process.env.LV_USER}/${process.env.LV_PASS}/${session.idSupplier}.m3u8` + " Error: " + manifest.status);
+      console.log(`${process.env.LV_URL}/${process.env.LV_USER}/${process.env.LV_PASS}/${session.stream_id}.m3u8` + " Error: " + manifest.status);
       res.status(503).json({ error: "Content provider error" });
       delete playingQueue[userQueue.id];
       return;
@@ -113,8 +116,8 @@ const sendManifest = (res: Response, userID: string) => {
   res.header("Cache-Control", "no-cache, no-store, must-revalidate");
   res.header("Pragma", "no-cache");
   res.header("Expires", "0");
-  res.set("Content-Type", userQueue.session.manifestMime);
-  res.send(manifestModify(userQueue.session.manifest, userQueue));
+  res.set("Content-Type", userQueue.session?.manifestMime);
+  res.send(manifestModify(userQueue.session?.manifest, userQueue));
   userQueue.time.lastRequest = Date.now();
 };
 
@@ -131,10 +134,10 @@ const sendSupplierContent = (res: Response, userID: string, url: string) => {
   res.header("Cache-Control", "no-cache, no-store, must-revalidate");
   res.header("Pragma", "no-cache");
   res.header("Expires", "0");
-  let supplierFQDN = userQueue.session.manifestURL
+  let supplierFQDN = userQueue.session?.manifestURL
     .split("://")[1]
     .split("/")[0];
-  let supplierProto = userQueue.session.manifestURL.split("://")[0];
+  let supplierProto = userQueue.session?.manifestURL.split("://")[0];
   let supplierURI = url.split(userID)[1];
 
   request(
@@ -142,7 +145,7 @@ const sendSupplierContent = (res: Response, userID: string, url: string) => {
   ).pipe(res);
 };
 
-const addSession = (item: Item, res: Response, userQueue: userQueue) => {
+const addSession = (item: LiveStream, res: Response, userQueue: userQueue) => {
   for (let i = 0; i < playingSession.length; i++) {
     if (item.id === playingSession[i].id) {
       userQueue.session = playingSession[i];
@@ -170,20 +173,13 @@ const newQueue = (req: Request) => {
       time: {
         start: Date.now(),
         lastRequest: Date.now(),
-      },
-      session: {
-        id: 0,
-        idSupplier: "",
-        manifestURL: "",
-        manifestMime: "",
-        name: ""
-      },
+      }
     };
     return playingQueue[userID];
   }
 };
 
-const addQueue = (req: Request, res: Response, item: Item) => {
+const addQueue = (req: Request, res: Response, item: LiveStream) => {
   if (getAccreditation(item)) {
     addSession(item, res, newQueue(req));
     return true;
@@ -215,7 +211,7 @@ const retrieveManifestOfSessions = async () => {
       let responseText = await manifest.text();
       if (manifest.status !== 200 || responseText === "\n") {
         try {
-          console.log(`Service ${playingSession[i].idSupplier} is down... Retrying...`);
+          console.log(`Service ${playingSession[i].stream_id} is down... Retrying...`);
           retrieveFirstManifest(playingSession[i], null, null);
         } catch (e) { }
         return;
@@ -223,7 +219,7 @@ const retrieveManifestOfSessions = async () => {
       playingSession[i].manifest = responseText;
     } catch (e) {
       try {
-        console.log(`Service ${playingSession[i].idSupplier} is down... Retrying...`);
+        console.log(`Service ${playingSession[i].stream_id} is down... Retrying...`);
         retrieveFirstManifest(playingSession[i], null, null);
       } catch (e) { }
     }
@@ -236,7 +232,7 @@ const deleteSession = () => {
   for (let i = 0; i < playingSession.length; i++) {
     let j = 0;
     for (let userQueue of Object.values(playingQueue)) {
-      if (userQueue.session.id === playingSession[i].id) {
+      if (userQueue.session?.id === playingSession[i].id) {
         j++;
         break;
       }

@@ -3,7 +3,7 @@ import type { Request } from "express";
 
 export class QueryBuilder<Model extends BaseModel<any>> {
   private filters: Record<string, {name: string, filter: any}> = {};
-  private psort: any = {};
+  private psort: string[] = [];
   private pselect: any = {};
   private ppopulate: any = {};
 
@@ -27,9 +27,25 @@ export class QueryBuilder<Model extends BaseModel<any>> {
     return filters;
   }
 
-  public sort(query: any) {
-    this.psort = query;
+  public sort(query: string | string[]) {
+    if (query instanceof Array)
+      this.psort.push(...query);
+    else
+      this.psort.push(query);
     return this;
+  }
+
+  private getSort(req: Request) {
+    if (typeof req.query?.sort != 'string')
+      return "";
+    let sorts = "";
+    const sortsRequest = req.query.sort.split(",");
+    this.psort.forEach((sort) => {
+      const sortValue = sortsRequest.find((value) => value === sort || value === `-${sort}` || value === `+${sort}`);
+      if (sortValue !== undefined)
+        sorts += `${sortValue} `;
+    });
+    return sorts;
   }
 
   public select(query: any) {
@@ -57,7 +73,7 @@ export class QueryBuilder<Model extends BaseModel<any>> {
       model
       .find(builder.getFilters(req))
       .select(builder.pselect)
-      .sort(builder.psort)
+      .sort(builder.getSort(req))
       .exec(function (err: never, data: any) {
         resolve(data);
       });
@@ -92,7 +108,7 @@ export class QueryBuilder<Model extends BaseModel<any>> {
         .find(builder.getFilters(req))
         .skip(skip)
         .limit(perPage)
-        .sort(builder.psort)
+        .sort(builder.getSort(req))
         .select(builder.pselect);
 
         builder.populateQuery(request);
