@@ -7,7 +7,7 @@ import type { User as UserT } from "../../models/user.js";
 
 const renewToken = (req: Request, res: Response) => {
   if (!req.cookies.userToken) {
-    res.status(500).json({ message: "Missing fields..." });
+    res.status(422).json({ message: "Missing fields..." });
     return;
   }
 
