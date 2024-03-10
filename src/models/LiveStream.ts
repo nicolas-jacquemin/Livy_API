@@ -6,6 +6,7 @@ const liveStreamSchema = new db.Schema({
   stream_id: { type: Number, required: true },
   stream_icon: { type: String },
   category: { type: db.Schema.Types.ObjectId, ref: "LiveStreamCategory", index: true},
+  liked: { type: Boolean, required: false },
 });
 
 const LiveStream = db.model("LiveStream", liveStreamSchema);

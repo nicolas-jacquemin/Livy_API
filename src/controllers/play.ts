@@ -1,7 +1,8 @@
 import request from "request";
 import type { Request, Response } from "express";
 import LiveStreamSchema from "../models/LiveStream.js";
-import type { HydratedDocumentFromSchema } from "mongoose";
+import type { HydratedDocumentFromSchema, ObjectId } from "mongoose";
+import User from "../models/user.js";
 
 interface LiveStream extends HydratedDocumentFromSchema<typeof LiveStreamSchema.schema> {};
 
@@ -20,6 +21,7 @@ type userQueue = {
   };
   UA: string;
   IP: string;
+  userId: string;
 };
 
 let playingQueue: {
@@ -65,8 +67,8 @@ const manifestModify = (m3u8: string, userQueue: userQueue) => {
   if (!m3u8)
     return;
   let m3u8a = m3u8.split("\n");
-  for (let i = 0; i < m3u8.length; i++) {
-    if (m3u8[i][0] == "/") {
+  for (let i = 0; i < m3u8a.length; i++) {
+    if (m3u8a[i][0] == "/") {
       m3u8a[i] = `/api/play/content/supplier/${userQueue.id}${m3u8a[i]}`;
     }
   }
@@ -75,7 +77,7 @@ const manifestModify = (m3u8: string, userQueue: userQueue) => {
 
 const retrieveFirstManifest = async (session: Session, res: Response, userQueue: userQueue) => {
   try {
-    let manifest = await fetch(`${process.env.LV_URL}/${process.env.LV_USER}/${process.env.LV_PASS}/${session.stream_id}.m3u8`, {
+    let manifest = await fetch(`${process.env.XTREAM_CODES_BASE_URL}/live/${process.env.XTREAM_CODES_USERNAME}/${process.env.XTREAM_CODES_PASSWORD}/${session.stream_id}.m3u8`, {
       method: "GET",
       headers: {
         'User-Agent': "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/113.0.0.0 Safari/537.36",
@@ -84,7 +86,7 @@ const retrieveFirstManifest = async (session: Session, res: Response, userQueue:
     });
     let responseText = await manifest.text();
     if (manifest.status !== 200 || responseText === "\n") {
-      console.log(`${process.env.LV_URL}/${process.env.LV_USER}/${process.env.LV_PASS}/${session.stream_id}.m3u8` + " Error: " + manifest.status);
+      console.log(`${session.stream_id}.m3u8` + " Error: " + manifest.status);
       res.status(503).json({ error: "Content provider error" });
       delete playingQueue[userQueue.id];
       return;
@@ -169,11 +171,12 @@ const newQueue = (req: Request) => {
     playingQueue[userID] = {
       id: userID,
       UA: req.headers["user-agent"],
-      IP: req.headers["x-forwarded-for"].toString(),
+      IP: req.headers["x-forwarded-for"]?.toString() ?? req.headers["ip"]?.toString(),
       time: {
         start: Date.now(),
         lastRequest: Date.now(),
-      }
+      },
+      userId: req.userId,
     };
     return playingQueue[userID];
   }
@@ -253,3 +256,30 @@ setInterval(() => {
 }, 1000);
 
 export { addQueue, listSession, listQueue, sendManifest, sendSupplierContent, endQueue };
+
+export const getSessions = async () => {
+  const sessions = await Promise.all(playingSession.map(async (session) => {
+
+    const playings = Object.values(playingQueue).filter((userQueue) => userQueue.session?.id === session.id);
+
+    const augmentedPlayings = await Promise.all(playings.map(async (userQueue) => {
+      const user = await User.findById(userQueue.userId);
+      if (!user) return;
+      return {
+        _id: user._id,
+        name: user.name,
+      }
+    }))
+
+    const users = [
+      ...new Set(augmentedPlayings)
+    ];
+
+    return {
+      liveStream: session,
+      users,
+    };
+  }));
+
+  return sessions;
+}

@@ -5,6 +5,7 @@ import LiveStreamCategory from "../../models/LiveStreamCategory.js";
 import { QueryBuilder } from "../../resources/QueryBuilder.js";
 import LiveStream from "../../models/LiveStream.js";
 import { sendManifest, sendSupplierContent, addQueue, endQueue } from "../../controllers/play.js";
+import User from "../../models/user.js";
 
 router.get("/categories", async (req, res) => {
   const categories = await new QueryBuilder(LiveStreamCategory)
@@ -37,6 +38,11 @@ router.get("/:id", async (req, res) => {
   .select("-__v")
   .populate("category", "-__v -streams")
   .exec();
+
+  const user = await User.findById(req.userId);
+
+  liveStream.liked = user?.likedLiveStreams.includes(liveStream.id) || false;
+
   res.json(liveStream);
 });
 
@@ -52,6 +58,24 @@ router.get("/:id/play", async (req, res) => {
   }
 
   addQueue(req, res, liveStream);
+});
+
+router.get("/:id/stream_icon", async (req, res) => {
+  const liveStream = await LiveStream.findById(req.params.id)
+  .select("stream_icon")
+  .exec();
+  if (!liveStream) {
+    res.status(404).json({ message: "Not found" });
+    return;
+  }
+  try {
+    const icon = await fetch(liveStream.stream_icon);
+    res.set("Content-Type", icon.headers.get("Content-Type"));
+    const buffer = await icon.arrayBuffer();
+    res.send(Buffer.from(buffer));
+  } catch (error) {
+    res.status(404).json({ message: "Stream Icon Not Found" });
+  }
 });
 
 export default router;

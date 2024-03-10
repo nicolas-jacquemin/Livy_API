@@ -40,7 +40,7 @@ router.post('/livestreams/like/:id', async (req, res) => {
   res.json({ message: 'Liked' });
 });
 
-router.post('/livestreams/unlike/:id', async (req, res) => {
+router.delete('/livestreams/like/:id', async (req, res) => {
   const me = await User.findById(req.userId);
   const liveStream = await LiveStream.findById(req.params.id)
   .catch(() => null);
