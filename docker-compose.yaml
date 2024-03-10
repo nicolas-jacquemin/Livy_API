@@ -16,7 +16,9 @@ services:
     command: mongod --auth
 
   server:
-    build: ./docker
+    build:
+      context: ./
+      dockerfile: ./docker/Dockerfile
     restart: unless-stopped
     env_file: ./.env
     environment:
