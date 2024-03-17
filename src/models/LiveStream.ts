@@ -2,10 +2,10 @@ import db from "../services/db.js";
 import {XmltvProgramme} from "@iptv/xmltv";
 
 const liveStreamSchema = new db.Schema({
-    num: {type: Number, required: true, index: {unique: true}},
+    num: {type: Number, required: true, index: true},
     name: {type: String, required: true, index: true},
     internal_name: {type: String, required: false},
-    stream_id: {type: Number, required: true},
+    stream_id: {type: Number, required: true, index: {unique: true}},
     stream_icon: {type: String},
     stream_type: {type: String},
     epg_channel_id: {type: String},

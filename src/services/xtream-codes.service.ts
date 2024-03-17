@@ -36,14 +36,15 @@ export class XtreamCodesService {
       const categoryEntity = await LiveStreamCategory.findOne({ category_id: category.category_id });
       const liveStreams = await this.player.getLiveStreams(category.category_id);
       for (const liveStream of liveStreams) {
-        if (!(await LiveStream.exists({ num: liveStream.num }))) {
+        if (!(await LiveStream.exists({ stream_id: liveStream.stream_id }))) {
           const liveStreamEntity = await LiveStream.create({...liveStream, category: categoryEntity._id});
           liveStreamEntity.internal_name = liveStream.name;
           await liveStreamEntity.save();
           categoryEntity.streams.push(liveStreamEntity._id);
           await categoryEntity.save();
         } else {
-            const liveStreamEntity = await LiveStream.findOne({ num: liveStream.num });
+            const liveStreamEntity = await LiveStream.findOne({ stream_id: liveStream.stream_id });
+          console.log("Updating live stream", liveStream, liveStreamEntity);
             liveStreamEntity.stream_id = liveStream.stream_id;
             liveStreamEntity.epg_channel_id = liveStream.epq_channel_id;
             liveStreamEntity.internal_name = liveStream.name;
