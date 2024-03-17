@@ -7,11 +7,13 @@
   "scripts": {
     "dev": "./node_modules/nodemon/bin/nodemon.js",
     "start": "npm run build && node ./dist/server.js",
-    "build": "npx tsc"
+    "build": "npx tsc",
+    "type-check": "tsc --noEmit"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@iptv/xmltv": "^1.0.1",
     "bcrypt": "^5.1.0",
     "cookie-parser": "^1.4.6",
     "cors": "^2.8.5",

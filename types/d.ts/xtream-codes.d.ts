@@ -6,6 +6,7 @@ declare module 'xtream-codes' {
     stream_id: number;
     stream_icon: string;
     category: LiveStreamCategory;
+    epq_channel_id: string;
   };
 
   export type LiveStreamCategory = {
@@ -13,6 +14,25 @@ declare module 'xtream-codes' {
     category_name: string;
     streams: LiveStream[];
   };
+
+  export type EPGContent = {
+    id: string;
+    epq_id: string;
+    title: string;
+    lang: string;
+    start: string;
+    end: string;
+    description: string;
+    channel_id: string;
+    start_timestamp: number;
+    stop_timestamp: number;
+    now_playing: boolean;
+    has_archive: boolean;
+  };
+
+  type EPGLiveStreamResponse = {
+    epg_listings: EPGContent[];
+  }
 
   export class Player {
     constructor(options: {
@@ -31,7 +51,7 @@ declare module 'xtream-codes' {
     getLiveStreams(category: string): Promise<LiveStream[]>;
     getVODStreams(category: string): Promise<any>;
     getVODInfo(streamId: number): Promise<any>;
-    getEPGLivetreams(streamId: number, limit: number): Promise<any>;
-    getAllEPGLiveStreams(streamId: number): Promise<any>;
+    getEPGLivetreams(streamId: string, limit: number): Promise<EPGLiveStreamResponse>;
+    getAllEPGLiveStreams(streamId: string | number): Promise<EPGLiveStreamResponse>;
   }
 }
