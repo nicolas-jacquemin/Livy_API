@@ -38,9 +38,16 @@ export class XtreamCodesService {
       for (const liveStream of liveStreams) {
         if (!(await LiveStream.exists({ num: liveStream.num }))) {
           const liveStreamEntity = await LiveStream.create({...liveStream, category: categoryEntity._id});
+          liveStreamEntity.internal_name = liveStream.name;
           await liveStreamEntity.save();
           categoryEntity.streams.push(liveStreamEntity._id);
           await categoryEntity.save();
+        } else {
+            const liveStreamEntity = await LiveStream.findOne({ num: liveStream.num });
+            liveStreamEntity.stream_id = liveStream.stream_id;
+            liveStreamEntity.epg_channel_id = liveStream.epq_channel_id;
+            liveStreamEntity.internal_name = liveStream.name;
+            await liveStreamEntity.save();
         }
       }
     }
