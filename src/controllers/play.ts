@@ -142,6 +142,8 @@ const sendSupplierContent = (res: Response, userID: string, url: string) => {
   let supplierProto = userQueue.session?.manifestURL.split("://")[0];
   let supplierURI = url.split(userID)[1];
 
+  userQueue.time.lastRequest = Date.now();
+
   request(
     `${supplierProto}://${supplierFQDN}${supplierURI}`,
   ).pipe(res);
@@ -248,7 +250,7 @@ const deleteSession = () => {
 
 setInterval(() => {
   for (let userQueue of Object.values(playingQueue)) {
-    if (userQueue.time.lastRequest + 20000 < Date.now()) {
+    if (userQueue.time.lastRequest + 60000 < Date.now()) {
       delete playingQueue[userQueue.id];
     }
   }
