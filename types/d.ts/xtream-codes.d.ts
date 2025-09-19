@@ -6,7 +6,7 @@ declare module 'xtream-codes' {
     stream_id: number;
     stream_icon: string;
     category: LiveStreamCategory;
-    epq_channel_id: string;
+    epg_channel_id: string;
   };
 
   export type LiveStreamCategory = {

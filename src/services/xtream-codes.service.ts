@@ -44,14 +44,22 @@ export class XtreamCodesService {
           await categoryEntity.save();
         } else {
             const liveStreamEntity = await LiveStream.findOne({ stream_id: liveStream.stream_id });
-          console.log("Updating live stream", liveStream, liveStreamEntity);
             liveStreamEntity.stream_id = liveStream.stream_id;
-            liveStreamEntity.epg_channel_id = liveStream.epq_channel_id;
+            liveStreamEntity.epg_channel_id = liveStream.epg_channel_id;
             liveStreamEntity.internal_name = liveStream.name;
             await liveStreamEntity.save();
         }
       }
+      const foundStreamIds = liveStreams.map(stream => stream.stream_id);
+      await LiveStream.deleteMany({
+        category: categoryEntity._id,
+        stream_id: { $nin: foundStreamIds }
+      });
     }
+    const foundCategoryIds = categories.map(cat => cat.category_id);
+    await LiveStreamCategory.deleteMany({
+      category_id: { $nin: foundCategoryIds }
+    });
   }
 }
 
